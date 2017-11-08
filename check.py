@@ -50,15 +50,33 @@ def restore_model(X_check):
 
 
 def main():
+
+    file_path = 'hotdog.jpg'
+    image_check = input_parser(file_path)
+    prediction = restore_model(image_check)
+    print('Hotdog test')
+    print('------------ \n')
+    if prediction[0] == True:
+        guess = 'Hotdog'
+        print('This is a ', guess, '! My NN was right.')
+    else:
+        guess = 'not a hotdog'
+        print('This is ', guess, ' and my NN was wrong.')
+    print('\n')
+    print('\n')
+
+    print('Not hotdog test')
+    print('--------------- \n')
     file_path = 'not_hotdog.jpg'
     image_check = input_parser(file_path)
     prediction = restore_model(image_check)
     if prediction[0] == True:
         guess = 'Hotdog'
-        print('This is a ', guess, '!')
+        print('This is a ', guess, ' :( My NN was wrong.')
     else:
         guess = 'not a hotdog'
-        print('This is ', guess)
+        print('This is ', guess, ' and my NN was right!.')
+    print('\n \n')
 
 
 
