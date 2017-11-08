@@ -67,11 +67,10 @@ def build_graph(epochs=10, learning_rate=0.01, num_nodes_hl1=500, num_nodes_hl2=
     cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=output, name='loss'))
     tf.summary.scalar("cost", cost)
 
-    # specify optimizer
+    validation_cost = cost
+    tf.summary.scalar("validation_cost", validation_cost)
 
 
-    # optimizer is an "operation" which we can execute in a session
-    # Our stochastic gradient descent function to determine what our function should do next to decrease cost
     optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost, name='optimizer')
 
     # Accuracy
@@ -92,10 +91,10 @@ def build_graph(epochs=10, learning_rate=0.01, num_nodes_hl1=500, num_nodes_hl2=
 
     print('Graph Built')
 
-    return x, y, cost, accuracy, optimizer, summary_op, saver, init, training_epochs
+    return x, y, cost, validation_cost, accuracy, optimizer, summary_op, saver, init, training_epochs
 
 
-def execute_nn(X_train, X_test, y_train, y_test, x, y, cost, accuracy, optimizer, summary_op, saver, init,
+def execute_nn(X_train, X_test, y_train, y_test, x, y, cost, validation_cost, accuracy, optimizer, summary_op, saver, init,
                training_epochs):
 
     # Need to create the "save_model" directory first
@@ -138,8 +137,7 @@ def execute_nn(X_train, X_test, y_train, y_test, x, y, cost, accuracy, optimizer
 
             print("Testing Accuracy:", sess.run(accuracy, feed_dict={x: X_test, y: y_test}))
 
-
-
+            print("Validation Loss:", sess.run(validation_cost, feed_dict={x: X_test, y: y_test}))
 
             print('Epoch ', epoch, ' completed out of ', training_epochs, ', loss: ', total_loss)
 
@@ -151,12 +149,24 @@ def execute_nn(X_train, X_test, y_train, y_test, x, y, cost, accuracy, optimizer
 
         return total_loss, accuracy
 
+# def clean_logs():
+#     import os
+#     if len(os.listdir('logs'))> 3:
+#         print()
+#             os.remove()
+
+
 
 def main():
     X_train, X_test, y_train, y_test = get_data()
-    x, y, cost, accuracy, optimizer, summary_op, saver, init, training_epochs = build_graph(epochs=20, learning_rate=.000001)
-    execute_nn(X_train, X_test, y_train, y_test, x, y, cost, accuracy, optimizer, summary_op, saver, init,
-               training_epochs)
+    x, y, cost, validation_cost, accuracy, optimizer, summary_op,\
+    saver, init, training_epochs = build_graph(epochs=30, learning_rate=.000001)
+
+    execute_nn(X_train, X_test, y_train, y_test, x, y, cost,
+               validation_cost, accuracy, optimizer, summary_op,
+               saver, init,training_epochs)
+
+
 
 
 if __name__ == "__main__":
