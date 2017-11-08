@@ -16,12 +16,13 @@ def get_data():
     return X_train, X_test, y_train, y_test
 
 
-def build_graph(epochs=10, learning_rate=0.01, num_nodes_hl1=500, num_nodes_hl2=500, num_nodes_hl3=500):
+def build_graph(epochs=10, learning_rate=0.01, num_nodes_hl1=500, num_nodes_hl2=500, num_nodes_hl3=500, num_nodes_hl4=500):
     tf.reset_default_graph()
 
     num_nodes_hl1 = num_nodes_hl1
     num_nodes_hl2 = num_nodes_hl2
     num_nodes_hl3 = num_nodes_hl3
+    num_nodes_hl4 = num_nodes_hl4
 
     training_epochs = epochs
 
@@ -38,13 +39,15 @@ def build_graph(epochs=10, learning_rate=0.01, num_nodes_hl1=500, num_nodes_hl2=
     W1 = tf.Variable(tf.random_normal([input_dim, num_nodes_hl1], name='hidden_layer_1'))
     W2 = tf.Variable(tf.random_normal([num_nodes_hl1, num_nodes_hl2], name='hidden_layer_2'))
     W3 = tf.Variable(tf.random_normal([num_nodes_hl2, num_nodes_hl3], name='hidden_layer_3'))
-    out_w = tf.Variable(tf.random_normal([num_nodes_hl3, n_classes], name='hidden_layer_1'))
+    W4 = tf.Variable(tf.random_normal([num_nodes_hl3, num_nodes_hl4], name='hidden_layer_3'))
+    out_w = tf.Variable(tf.random_normal([num_nodes_hl4, n_classes], name='hidden_layer_1'))
 
     # bias
 
     b1 = tf.Variable(tf.random_normal([num_nodes_hl1]))
     b2 = tf.Variable(tf.random_normal([num_nodes_hl2]))
     b3 = tf.Variable(tf.random_normal([num_nodes_hl3]))
+    b4 = tf.Variable(tf.random_normal([num_nodes_hl4]))
     out_b = tf.Variable(tf.random_normal([n_classes]))
 
     # y is our prediction
@@ -59,7 +62,10 @@ def build_graph(epochs=10, learning_rate=0.01, num_nodes_hl1=500, num_nodes_hl2=
     l3 = tf.add(tf.matmul(l2, W3), b3)
     l3 = tf.nn.relu(l3, name='relu_l3')
 
-    output = tf.add(tf.matmul(l3, out_w), out_b, name='output')
+    l4 = tf.add(tf.matmul(l3, W4), b4)
+    l4 = tf.nn.relu(l4, name='relu_l3')
+
+    output = tf.add(tf.matmul(l4, out_w), out_b, name='output')
 
     # specify cost function
 
@@ -71,7 +77,7 @@ def build_graph(epochs=10, learning_rate=0.01, num_nodes_hl1=500, num_nodes_hl2=
     tf.summary.scalar("validation_cost", validation_cost)
 
 
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost, name='optimizer')
+    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost, name='optimizer')
 
     # Accuracy
     correct_prediction = tf.equal(tf.argmax(output, 1), tf.argmax(y, 1), name='correct_prediction')
@@ -160,13 +166,11 @@ def execute_nn(X_train, X_test, y_train, y_test, x, y, cost, validation_cost, ac
 def main():
     X_train, X_test, y_train, y_test = get_data()
     x, y, cost, validation_cost, accuracy, optimizer, summary_op,\
-    saver, init, training_epochs = build_graph(epochs=30, learning_rate=.000001)
+    saver, init, training_epochs = build_graph(epochs=30, learning_rate=.01)
 
     execute_nn(X_train, X_test, y_train, y_test, x, y, cost,
                validation_cost, accuracy, optimizer, summary_op,
-               saver, init,training_epochs)
-
-
+               saver, init, training_epochs)
 
 
 if __name__ == "__main__":

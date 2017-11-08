@@ -4,7 +4,6 @@ import numpy as np
 import cv2
 
 
-
 def input_parser(filenames):
     # convert the label to one-hot encoding
     # step 2
@@ -24,12 +23,11 @@ def input_parser(filenames):
 
     return X_check
 
+
 def restore_model(X_check):
     model_path = "saved_model/model.ckpt"
 
     y_correct = np.array([0.00000000, 1.000000000]).reshape(-1, 2)
-
-
 
     with tf.Session() as sess:
         saver = tf.train.import_meta_graph(model_path + '.meta')
@@ -43,20 +41,18 @@ def restore_model(X_check):
 
         correct_prediction = graph.get_tensor_by_name('correct_prediction:0')
 
-
-        y_hat = sess.run(correct_prediction, feed_dict={x: X_check, y:y_correct})
+        y_hat = sess.run(correct_prediction, feed_dict={x: X_check, y: y_correct})
 
     return y_hat
 
 
 def main():
-
     file_path = 'hotdog.jpg'
     image_check = input_parser(file_path)
     prediction = restore_model(image_check)
     print('Hotdog test')
     print('------------ \n')
-    if prediction[0] == True:
+    if prediction[0]:
         guess = 'Hotdog'
         print('This is a ', guess, '! My NN was right.')
     else:
@@ -77,8 +73,6 @@ def main():
         guess = 'not a hotdog'
         print('This is ', guess, ' and my NN was right!.')
     print('\n \n')
-
-
 
 
 if __name__ == "__main__":
