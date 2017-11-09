@@ -1,11 +1,18 @@
 import tensorflow as tf
 import pandas as pd
+import itertools
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, roc_auc_score
+import seaborn as sns
+import numpy as np
+import matplotlib.pyplot as plt
 
-model_path = "saved_model/model.ckpt"
+model_path = "conv_model/model.ckpt"
 
 X_ = pd.read_csv('X.csv').values
 Y_ = pd.read_csv('Y.csv').values
+
+X_ = np.array(X_).reshape(-1, 28, 28, 1)
 
 X_train, X_test, y_train, y_test = train_test_split(X_, Y_, test_size=0.2, random_state=42)
 
@@ -26,18 +33,12 @@ with tf.Session() as sess:
     output = graph.get_tensor_by_name('output:0')
     correct_prediction = graph.get_tensor_by_name('correct_prediction:0')
 
-    cp, a , o= sess.run([correct_prediction, accuracy, tf.argmax(output, 1)], feed_dict={x: X_test, y: y_test})
+    cp, a, o = sess.run([correct_prediction, accuracy, tf.argmax(output, 1)], feed_dict={x: X_test, y: y_test})
 
     predictions.append(o)
 
 
 
-
-import itertools
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, roc_auc_score
-import seaborn as sns
-import numpy as np
-import matplotlib.pyplot as plt
 
 actuals = [y[1] for y in y_test]
 actuals = np.array(actuals)
@@ -62,16 +63,13 @@ def print_cm(cm, labels=class_names, hide_zeroes=False, hide_diagonal=False, hid
     columnwidth = max([len(x) for x in labels] + [5])  # 5 is value length
     empty_cell = " " * columnwidth
     # Print header
-    print
-    "    " + empty_cell,
+    print("    " + empty_cell)
     for label in labels:
-        print
-        "%{0}s".format(columnwidth) % label,
-    print
+        print("%{0}s".format(columnwidth) % label)
+
     # Print rows
     for i, label1 in enumerate(labels):
-        print
-        "    %{0}s".format(columnwidth) % label1,
+        print("    %{0}s".format(columnwidth) % label1)
         for j in range(len(labels)):
             cell = "%{0}.1f".format(columnwidth) % cm[i, j]
             if hide_zeroes:
@@ -80,9 +78,10 @@ def print_cm(cm, labels=class_names, hide_zeroes=False, hide_diagonal=False, hid
                 cell = cell if i != j else empty_cell
             if hide_threshold:
                 cell = cell if cm[i, j] > hide_threshold else empty_cell
-            print
-            cell,
-        print
+            print(cell)
+
+
+
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',

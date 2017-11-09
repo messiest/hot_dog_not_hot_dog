@@ -1,14 +1,13 @@
 import tensorflow as tf
 import numpy as np
+import os
 
-tf.reset_default_graph()
-
-n_classes = 2
-
-# None -> batch size can be any size, 784 -> flattened mnist image
-x = tf.placeholder('float', shape=[None, 784], name='x_placeholder')
-# target 10 output classes
-y = tf.placeholder('float', shape=[None, n_classes], name='y_placeholder')
+def remove_logs():
+    logs_length = len(os.listdir('logs'))
+    logs = os.listdir('logs')
+    if  logs_length >= 1:
+        for i in range(logs_length - 1):
+            os.remove(logs[i])
 
 def get_data():
     import pandas as pd
@@ -21,124 +20,109 @@ def get_data():
     print(X_.shape)
     print(Y_.shape)
 
-    X_train, X_test, y_train, y_test = train_test_split(X_, Y_, test_size=0.2, random_state=42,)
+    X_train, X_test, y_train, y_test = train_test_split(X_, Y_, test_size=0.2, random_state=42, )
 
     print('Images Read')
 
     return X_train, X_test, y_train, y_test
 
+
 def conv2d(x, W):
-        return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+    return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+
 
 def maxpool2d(x):
     #                        size of window         movement of window
     return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
-def build_graph(epochs=10, learning_rate=0.01, num_nodes_hl1=500, num_nodes_hl2=500, num_nodes_hl3=500, num_nodes_hl4=10):
 
+def convolutional_nn(epochs=10, learning_rate=0.01):
+
+    # Get data and TTS
+    X_train, X_test, y_train, y_test = get_data()
+
+    # Config
+    model_path = "conv_model/model.ckpt"
+    batch_size = 100
+    logs_path = "logs"
+    training_epochs = epochs
+    learning_rate = learning_rate
+    n_classes = 2
+    input_dim = [None, 28, 28, 1]
+    keep_rate = 0.8
+
+    # Reset Graph
     tf.reset_default_graph()
 
-    n_classes = 2
-
-
-    x = tf.placeholder('float', shape=[None, 28, 28, 1], name='x_placeholder')
-    print(x)
-
-
-
-    # target 10 output classes
+    # Placeholders
+    x = tf.placeholder('float', shape=input_dim, name='x_placeholder')
     y = tf.placeholder('float', shape=[None, n_classes], name='y_placeholder')
 
-    num_nodes_hl1 = num_nodes_hl1
-    num_nodes_hl2 = num_nodes_hl2
-    num_nodes_hl3 = num_nodes_hl3
-    num_nodes_hl4 = num_nodes_hl4
-
-    training_epochs = epochs
-
-    n_classes = 2
-    learning_rate = learning_rate
-    # The size of our imput data is 784
-    input_dim = 784
-
-    keep_rate = 0.8
-    keep_prob = tf.placeholder(tf.float32)
-
-
-
-    W1_conv = tf.Variable(tf.random_normal([5,5,1,32]), name='hidden_layer_1')
-    W2_conv = tf.Variable(tf.random_normal([5,5,32,64]), name='hidden_layer_2')
-    W3 = tf.Variable(tf.random_normal([7*7*64,1024]), name='hidden_layer_3')
-    out_w = tf.Variable(tf.random_normal([1024, n_classes]), name='hidden_layer_3')
-
+    # Weights
+    W1_conv = tf.Variable(tf.random_normal([5, 5, 1, 32]), name='hidden_layer_1')
+    W2_conv = tf.Variable(tf.random_normal([5, 5, 32, 64]), name='hidden_layer_2')
+    W3 = tf.Variable(tf.random_normal([3136, 3136]), name='hidden_layer_3')
+    W4 = tf.Variable(tf.random_normal([3136, 3136]), name='hidden_layer_3')
+    W5 = tf.Variable(tf.random_normal([3136, 3136]), name='hidden_layer_3')
+    out_w = tf.Variable(tf.random_normal([3136, n_classes]), name='hidden_layer_3')
 
     # bias
-
     b1_conv = tf.Variable(tf.random_normal([32]))
     b2_conv = tf.Variable(tf.random_normal([64]))
-    b3 = tf.Variable(tf.random_normal([1024]))
+    b3 = tf.Variable(tf.random_normal([3136]))
+    b4 = tf.Variable(tf.random_normal([3136]))
+    b5 = tf.Variable(tf.random_normal([3136]))
     out_b = tf.Variable(tf.random_normal([n_classes]))
 
-
-
+    # Convolutional Layers
     conv1 = tf.nn.relu(conv2d(x, W1_conv + b1_conv))
     conv1 = maxpool2d(conv1)
+    conv1_norm = tf.nn.local_response_normalization(conv1)
 
-    conv2 = tf.nn.relu(conv2d(conv1, W2_conv + b2_conv))
+    conv2 = tf.nn.relu(conv2d(conv1_norm, W2_conv + b2_conv))
     conv2 = maxpool2d(conv2)
 
-    l3 = tf.reshape(conv2, [-1, 7*7*64])
-    l3 = tf.nn.relu(tf.matmul(l3, W3 + b3))
-    l3 = tf.nn.dropout(l3, keep_rate)
+    # Fully Conncected Layer
+    fc = tf.reshape(conv2, [-1, 7 * 7 * 64])
+    fc = tf.nn.relu(tf.matmul(fc, W3 + b3))
+    fc = tf.nn.dropout(fc, keep_rate)
 
+    # Logistic Classifiers
+    l4 = tf.matmul(fc, W4) + b4
+    l4_actv = tf.nn.sigmoid(l4)
 
-    output = tf.add(tf.matmul(l3, out_w), out_b, name='output')
+    l5 = tf.matmul(l4_actv, W5) + b5
+    l5_actv = tf.nn.sigmoid(l5)
+    final_logits = tf.matmul(l5_actv, W5) + b5
 
-    # specify cost function
+    # Predictions
+    output = tf.add(tf.matmul(final_logits, out_w), out_b, name='output')
 
-    # this is our cost
+    # Cost function
     cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=output, name='loss'))
     tf.summary.scalar("cost", cost)
 
+    # Validation cost
     validation_cost = cost
     tf.summary.scalar("validation_cost", validation_cost)
 
+    # Optimizer
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost, name='optimizer')
 
-    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost, name='optimizer')
-
-    # Accuracy
+    # Correct Predictions and Accuracy
     correct_prediction = tf.equal(tf.argmax(output, 1), tf.argmax(y, 1), name='correct_prediction')
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
     tf.summary.scalar("accuracy", accuracy)
 
-    # create a summary for our cost and accuracy
-
-
-
     # merge all summaries into a single "operation" which we can execute in a session
     summary_op = tf.summary.merge_all()
 
+    # Save only one model
     saver = tf.train.Saver(max_to_keep=1)
 
     init = tf.global_variables_initializer()
 
     print('Graph Built')
-
-    return x, y, cost, validation_cost, accuracy, optimizer, summary_op, saver, init, training_epochs
-
-
-def execute_nn(X_train, X_test, y_train, y_test, x, y, cost, validation_cost, accuracy, optimizer, summary_op, saver, init,
-               training_epochs):
-
-    # Need to create the "save_model" directory first
-    model_path = "conv_model/model.ckpt"
-    # These are the number of nodes we want to have in each layer,
-    # we can set these values to whatever we want.
-
-    # config
-    batch_size = 100
-    training_epochs = training_epochs
-    logs_path = "logs"
 
     with tf.Session() as sess:
         print('Session Started')
@@ -165,10 +149,9 @@ def execute_nn(X_train, X_test, y_train, y_test, x, y, cost, validation_cost, ac
                 _, summary, c = sess.run([optimizer, summary_op, cost], feed_dict={x: batch_x, y: batch_y})
 
                 total_loss += c
+
                 # write log
                 writer.add_summary(summary, epoch * batch_count + i)
-
-
 
             print("Testing Accuracy:", sess.run(accuracy, feed_dict={x: X_test, y: y_test}))
 
@@ -176,27 +159,16 @@ def execute_nn(X_train, X_test, y_train, y_test, x, y, cost, validation_cost, ac
 
             print('Epoch ', epoch, ' completed out of ', training_epochs, ', loss: ', total_loss)
 
-        # Save model weights to disk
-
+        # Save model
         save_path = saver.save(sess, model_path)
-
         print("Model saved in file: %s" % save_path)
 
         return total_loss, accuracy
 
 
-
 def main():
-
-
-    X_train, X_test, y_train, y_test = get_data()
-    x, y, cost, validation_cost, accuracy, optimizer, summary_op, \
-    saver, init, training_epochs = build_graph(epochs=5, learning_rate=.01)
-
-    execute_nn(X_train, X_test, y_train, y_test, x, y, cost,
-               validation_cost, accuracy, optimizer, summary_op,
-               saver, init, training_epochs)
-
+    total_loss, accuracy = convolutional_nn(epochs=5, learning_rate=.0000000000000000001)
+    remove_logs()
 
 if __name__ == "__main__":
     main()
