@@ -1,6 +1,9 @@
 import tensorflow as tf
 import numpy as np
 import os
+import time
+
+start = time.time()
 
 def remove_logs():
     logs_length = len(os.listdir('logs'))
@@ -17,12 +20,12 @@ def get_data():
     Y_ = pd.read_csv('Y.csv').values
 
     X_ = np.array(X_).reshape(-1, 28, 28, 1)
-    print(X_.shape)
-    print(Y_.shape)
 
     X_train, X_test, y_train, y_test = train_test_split(X_, Y_, test_size=0.2, random_state=42, )
 
-    print('Images Read')
+    data_time = time.time() - start
+
+    print('Images Read: {} seconds'.format(round(data_time, 0)))
 
     return X_train, X_test, y_train, y_test
 
@@ -38,18 +41,20 @@ def maxpool2d(x):
 
 def convolutional_nn(epochs=10, learning_rate=0.01):
 
+    nn_start = time.time()
+
     # Get data and TTS
     X_train, X_test, y_train, y_test = get_data()
 
     # Config
     model_path = "conv_model/model.ckpt"
-    batch_size = 100
+    batch_size = 128
     logs_path = "logs"
     training_epochs = epochs
     learning_rate = learning_rate
     n_classes = 2
     input_dim = [None, 28, 28, 1]
-    keep_rate = 0.8
+    keep_rate = 0.2
 
     # Reset Graph
     tf.reset_default_graph()
@@ -75,24 +80,24 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
     out_b = tf.Variable(tf.random_normal([n_classes]))
 
     # Convolutional Layers
-    conv1 = tf.nn.relu(conv2d(x, W1_conv + b1_conv))
+    conv1 = tf.nn.elu(conv2d(x, W1_conv + b1_conv))
     conv1 = maxpool2d(conv1)
+    conv1 = tf.nn.dropout(conv1, keep_rate)
     conv1_norm = tf.nn.local_response_normalization(conv1)
 
-    conv2 = tf.nn.relu(conv2d(conv1_norm, W2_conv + b2_conv))
+
+    conv2 = tf.nn.elu(conv2d(conv1_norm, W2_conv + b2_conv))
     conv2 = maxpool2d(conv2)
+    conv2 = tf.nn.dropout(conv2, keep_rate)
 
     # Fully Conncected Layer
     fc = tf.reshape(conv2, [-1, 7 * 7 * 64])
-    fc = tf.nn.relu(tf.matmul(fc, W3 + b3))
+    fc = tf.nn.elu(tf.matmul(fc, W3 + b3))
     fc = tf.nn.dropout(fc, keep_rate)
 
-    # Logistic Classifiers
-    l4 = tf.matmul(fc, W4) + b4
-    l4_actv = tf.nn.sigmoid(l4)
 
-    l5 = tf.matmul(l4_actv, W5) + b5
-    l5_actv = tf.nn.sigmoid(l5)
+    l5 = tf.matmul(fc, W5) + b5
+    l5_actv = tf.nn.softmax(l5)
     final_logits = tf.matmul(l5_actv, W5) + b5
 
     # Predictions
@@ -107,7 +112,7 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
     tf.summary.scalar("validation_cost", validation_cost)
 
     # Optimizer
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost, name='optimizer')
+    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost, name='optimizer')
 
     # Correct Predictions and Accuracy
     correct_prediction = tf.equal(tf.argmax(output, 1), tf.argmax(y, 1), name='correct_prediction')
@@ -122,7 +127,10 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
 
     init = tf.global_variables_initializer()
 
-    print('Graph Built')
+    graph_time = time.time() - nn_start
+
+    print('Graph Built: {} seconds'.format(round(graph_time, 0)))
+
 
     with tf.Session() as sess:
         print('Session Started')
@@ -136,6 +144,8 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
 
         # perform training cycles
         for epoch in range(training_epochs):
+
+            epoch_start = time.time()
 
             batch_count = int(len(X_train) / batch_size)
             total_loss = 0
@@ -158,16 +168,24 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
             print("Validation Loss:", sess.run(validation_cost, feed_dict={x: X_test, y: y_test}))
 
             print('Epoch ', epoch, ' completed out of ', training_epochs, ', loss: ', total_loss)
+            epoch_time = epoch_start - time.time()
+
+            print('Epoch time: {} seconds'.format(round(epoch_time, 0)))
+            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n')
 
         # Save model
         save_path = saver.save(sess, model_path)
         print("Model saved in file: %s" % save_path)
 
+        total_time = time.time() - start
+
+        print('Total time: {} seconds'.format(round(total_time, 0)))
+
         return total_loss, accuracy
 
 
 def main():
-    total_loss, accuracy = convolutional_nn(epochs=5, learning_rate=.0000000000000000001)
+    total_loss, accuracy = convolutional_nn(epochs=3, learning_rate=.0000000000000000000001)
     remove_logs()
 
 if __name__ == "__main__":
