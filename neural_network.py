@@ -9,6 +9,9 @@ def get_data():
     X_ = pd.read_csv('X.csv').values
     Y_ = pd.read_csv('Y.csv').values
 
+    print(X_.shape)
+    print(Y_.shape)
+
     X_train, X_test, y_train, y_test = train_test_split(X_, Y_, test_size=0.2, random_state=42)
 
     print('Images Read')
@@ -16,7 +19,8 @@ def get_data():
     return X_train, X_test, y_train, y_test
 
 
-def build_graph(epochs=10, learning_rate=0.01, num_nodes_hl1=500, num_nodes_hl2=500, num_nodes_hl3=500, num_nodes_hl4=500):
+
+def build_graph(epochs=10, learning_rate=0.01, num_nodes_hl1=500, num_nodes_hl2=500, num_nodes_hl3=500, num_nodes_hl4=10):
     tf.reset_default_graph()
 
     num_nodes_hl1 = num_nodes_hl1
@@ -166,7 +170,7 @@ def execute_nn(X_train, X_test, y_train, y_test, x, y, cost, validation_cost, ac
 def main():
     X_train, X_test, y_train, y_test = get_data()
     x, y, cost, validation_cost, accuracy, optimizer, summary_op,\
-    saver, init, training_epochs = build_graph(epochs=30, learning_rate=.01)
+    saver, init, training_epochs = build_graph(epochs=10, learning_rate=.0001)
 
     execute_nn(X_train, X_test, y_train, y_test, x, y, cost,
                validation_cost, accuracy, optimizer, summary_op,
