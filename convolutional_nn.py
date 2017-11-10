@@ -4,9 +4,8 @@ import time
 import numpy as np
 import tensorflow as tf
 
-import image_bootstrapping as ib
-
 start = time.time()
+
 
 def remove_logs():
     logs_length = len(os.listdir('logs'))
@@ -16,10 +15,9 @@ def remove_logs():
             os.remove(logs[i])
 
 
-def get_data():
-
+def get_data(X_, Y_):
     from sklearn.model_selection import train_test_split
-    X_, Y_ = ib.loadData(128, 15000)
+
 
     print('Y Done')
     print(np.array(Y_).shape)
@@ -38,13 +36,14 @@ def get_data():
 
     return X_train, X_test, y_train, y_test
 
-
 def conv2d(x, W, padding):
     return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding=padding)
+
 
 def maxpool2d(x, padding):
     #                             size of window      movement of window
     return tf.nn.max_pool(x, ksize=[1, 4, 4, 1], strides=[1, 4, 4, 1], padding=padding)
+
 
 def maxpool2d_dif(x, padding):
     #                             size of window       movement of window
@@ -52,7 +51,6 @@ def maxpool2d_dif(x, padding):
 
 
 def convolutional_nn(epochs=10, learning_rate=0.01):
-
     nn_start = time.time()
 
     # Get data and TTS
@@ -60,7 +58,7 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
 
     # Config
     model_path = "conv_model/model.ckpt"
-    batch_size = 128
+    batch_size = 32
     logs_path = "logs"
     training_epochs = epochs
     learning_rate = learning_rate
@@ -99,21 +97,17 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
     conv1 = maxpool2d_dif(conv1, 'VALID')
     conv1_norm = tf.nn.local_response_normalization(conv1)
 
-    conv2 = tf.nn.elu(conv2d(conv1_norm, W2_conv + b2_conv,'SAME'))
+    conv2 = tf.nn.elu(conv2d(conv1_norm, W2_conv + b2_conv, 'SAME'))
     conv2 = maxpool2d(conv2, 'SAME')
-
-
 
     conv3 = tf.nn.elu(conv2d(conv2, W3_conv + b3_conv, 'SAME'))
     conv3 = maxpool2d(conv3, 'SAME')
     conv3 = tf.nn.dropout(conv3, 0.2)
 
-
     # Fully Conncected Layer
     fc = tf.reshape(conv3, [-1, 512])
     fc = tf.nn.dropout(fc, 0.5)
     fc = tf.nn.elu(tf.matmul(fc, W4 + b4))
-
 
     l5 = tf.matmul(fc, W5) + b5
     l5_actv = tf.nn.softmax(l5)
@@ -129,12 +123,13 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
     # Validation cost
     validation_cost = cost
     tf.summary.scalar("validation_cost", validation_cost)
-
+    tf.summary.histogram('Hist Val Cost', validation_cost)
 
     # Correct Predictions and Accuracy
     correct_prediction = tf.equal(tf.argmax(output, 1), tf.argmax(y, 1), name='correct_prediction')
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
     tf.summary.scalar("accuracy", accuracy)
+    tf.summary.histogram('Hist Accuracy', accuracy)
 
     # Optimizer
     optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost, name='optimizer')
@@ -150,7 +145,6 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
     graph_time = time.time() - nn_start
 
     print('Graph Built: {} seconds'.format(round(graph_time, 0)))
-
 
     with tf.Session() as sess:
         print('Session Started')
@@ -168,7 +162,7 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
             epoch_start = time.time()
 
             batch_count = int(len(X_train) / batch_size)
-            print(batch_count)
+            print('Number of Batches: ', batch_count)
             total_loss = 0
             for i in range(batch_count):
                 randidx = np.random.randint(len(X_train), size=batch_size)
@@ -185,7 +179,6 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
                 writer.add_summary(summary, epoch * batch_count + i)
 
             print("Testing Accuracy:", sess.run(accuracy, feed_dict={x: X_test, y: y_test}))
-
 
             print("Validation Loss:", sess.run(validation_cost, feed_dict={x: X_test, y: y_test}))
 
@@ -207,8 +200,9 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
 
 
 def main():
-    total_loss, accuracy = convolutional_nn(epochs=5)
+    total_loss, accuracy = convolutional_nn(epochs=5, learning_rate=0.0001)
     # remove_logs()
+
 
 if __name__ == "__main__":
     main()
