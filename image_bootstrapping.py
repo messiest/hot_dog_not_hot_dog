@@ -43,31 +43,31 @@ def loadImgClass(classPath, classLable, classSize, imgSize):
     #
     for path in classPath:
         img = np.array(loadImg(path, imgSize))
-        x.append(img.ravel())
+        x.append(img)
         y.append(classLable)
 
     while len(x) < classSize/4:
         randIdx = np.random.randint(0, len(classPath))
         img = np.array(loadRotateBlurImg(classPath[randIdx], imgSize))
-        x.append(img.ravel())
+        x.append(img)
         y.append(classLable)
 
     while len(x) < classSize/2:
         randIdx = np.random.randint(0, len(classPath))
         img = np.array(loadBlurImg(classPath[randIdx], imgSize))
-        x.append(img.ravel())
+        x.append(img)
         y.append(classLable)
 
     while len(x) < classSize * (3/4):
         randIdx = np.random.randint(0, len(classPath))
         img = np.array(loadRotate(classPath[randIdx], imgSize))
-        x.append(img.ravel())
+        x.append(img)
         y.append(classLable)
 
     while len(x) < classSize:
         randIdx = np.random.randint(0, len(classPath))
         img = np.array(loadImg(classPath[randIdx], imgSize))
-        x.append(img.ravel())
+        x.append(img)
         y.append(classLable)
 
     return x, y
@@ -102,11 +102,11 @@ def loadData(img_size, classSize):
     print(np.array(X).shape)
     print(np.array(y).shape)
 
-    np.savetxt("X.csv", X, delimiter=",")
-
-    np.savetxt("Y.csv", y, delimiter=",")
+    # np.savetxt("X.csv", X, delimiter=",")
+    #
+    # np.savetxt("Y.csv", y, delimiter=",")
 
     return X, y
 
-
-X, y = loadData(28, 15000)
+print('Starting Bootstrap')
+# X_, Y_ = loadData(128, 15000)

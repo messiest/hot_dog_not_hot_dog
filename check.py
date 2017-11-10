@@ -22,7 +22,7 @@ def input_parser(filenames):
         images = images.astype('float32')
 
         images = images.ravel()
-        X_check = images.reshape(-1, 784)
+        X_check = images.reshape(28, 28, 1)
 
         tests.append(X_check)
 
@@ -58,7 +58,7 @@ def restore_model(tests, model_path):
 
 
 def main():
-    model_path = "saved_model/model.ckpt"
+    model_path = "conv_model/model.ckpt"
     file_path = ['hotdog.jpg', 'not_hotdog.jpg']
     image_check = input_parser(file_path)
     prediction = restore_model(image_check, model_path)

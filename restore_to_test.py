@@ -92,12 +92,10 @@ def plot_confusion_matrix(cm, classes,
     """
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        print
-        '\n'
+        print('\n')
         print("Normalized confusion matrix")
     else:
-        print
-        '\n'
+        print('\n')
         print('Confusion matrix, without normalization')
     print_cm(cm, class_names)
     text_labels = [['True Negative', 'False Positive'],

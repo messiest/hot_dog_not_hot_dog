@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import os
 import time
+# import image_bootstrapping as ib
 
 start = time.time()
 
@@ -16,12 +17,20 @@ def get_data():
     import pandas as pd
     from sklearn.model_selection import train_test_split
 
-    X_ = pd.read_csv('X.csv').values
     Y_ = pd.read_csv('Y.csv').values
+    print('Y Done')
+    print(np.array(Y_).shape)
+    X_ = pd.read_csv('X.csv').values
+    print('X Done')
 
-    X_ = np.array(X_).reshape(-1, 28, 28, 1)
+    # X_, Y_ = ib.loadData(128, 15000)
+    print(X_.shape)
 
-    X_train, X_test, y_train, y_test = train_test_split(X_, Y_, test_size=0.2, random_state=42, )
+
+    X_ = np.array(X_).reshape(-1, 128, 128, 1)
+
+    print(X_.shape)
+    X_train, X_test, y_train, y_test = train_test_split(X_, Y_, test_size=0.2, random_state=42)
 
     data_time = time.time() - start
 
@@ -30,13 +39,18 @@ def get_data():
     return X_train, X_test, y_train, y_test
 
 
-def conv2d(x, W):
-    return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
+def conv2d(x, W, padding):
+    return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding=padding)
 
 
-def maxpool2d(x):
+
+def maxpool2d(x, padding):
     #                        size of window         movement of window
-    return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+    return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding=padding)
+
+def maxpool2d_dif(x, padding):
+    #                        size of window         movement of window
+    return tf.nn.max_pool(x, ksize=[1, 4, 4, 1], strides=[1, 4, 4, 1], padding=padding)
 
 
 def convolutional_nn(epochs=10, learning_rate=0.01):
@@ -48,13 +62,13 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
 
     # Config
     model_path = "conv_model/model.ckpt"
-    batch_size = 128
+    batch_size = 1
     logs_path = "logs"
     training_epochs = epochs
     learning_rate = learning_rate
-    n_classes = 2
-    input_dim = [None, 28, 28, 1]
-    keep_rate = 0.2
+    n_classes = 128
+    input_dim = [None, 128, 128, 1]
+    keep_rate = 0.3
 
     # Reset Graph
     tf.reset_default_graph()
@@ -62,38 +76,47 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
     # Placeholders
     x = tf.placeholder('float', shape=input_dim, name='x_placeholder')
     y = tf.placeholder('float', shape=[None, n_classes], name='y_placeholder')
+    y = tf.reshape(y, [-1, 2])
 
     # Weights
-    W1_conv = tf.Variable(tf.random_normal([5, 5, 1, 32]), name='hidden_layer_1')
-    W2_conv = tf.Variable(tf.random_normal([5, 5, 32, 64]), name='hidden_layer_2')
-    W3 = tf.Variable(tf.random_normal([3136, 3136]), name='hidden_layer_3')
-    W4 = tf.Variable(tf.random_normal([3136, 3136]), name='hidden_layer_3')
-    W5 = tf.Variable(tf.random_normal([3136, 3136]), name='hidden_layer_3')
-    out_w = tf.Variable(tf.random_normal([3136, n_classes]), name='hidden_layer_3')
+    W1_conv = tf.Variable(tf.random_normal([8, 8, 1, 16]), name='hidden_layer_1')
+    W2_conv = tf.Variable(tf.random_normal([5, 5, 16, 32]), name='hidden_layer_2')
+    W3_conv = tf.Variable(tf.random_normal([5, 5, 32, 128]), name='hidden_layer_3')
+    W4 = tf.Variable(tf.random_normal([512, 512]), name='hidden_layer_4')
+    W5 = tf.Variable(tf.random_normal([512, 512]), name='hidden_layer_5')
+    out_w = tf.Variable(tf.random_normal([512, n_classes]), name='hidden_layer_out')
 
     # bias
-    b1_conv = tf.Variable(tf.random_normal([32]))
-    b2_conv = tf.Variable(tf.random_normal([64]))
-    b3 = tf.Variable(tf.random_normal([3136]))
-    b4 = tf.Variable(tf.random_normal([3136]))
-    b5 = tf.Variable(tf.random_normal([3136]))
+    b1_conv = tf.Variable(tf.random_normal([16]))
+    b2_conv = tf.Variable(tf.random_normal([32]))
+    b3_conv = tf.Variable(tf.random_normal([128]))
+    b4 = tf.Variable(tf.random_normal([512]))
+    b5 = tf.Variable(tf.random_normal([512]))
     out_b = tf.Variable(tf.random_normal([n_classes]))
 
     # Convolutional Layers
-    conv1 = tf.nn.elu(conv2d(x, W1_conv + b1_conv))
-    conv1 = maxpool2d(conv1)
-    conv1 = tf.nn.dropout(conv1, keep_rate)
+    conv1 = tf.nn.elu(conv2d(x, W1_conv + b1_conv, 'VALID'))
+    conv1 = maxpool2d_dif(conv1, 'VALID')
     conv1_norm = tf.nn.local_response_normalization(conv1)
 
 
-    conv2 = tf.nn.elu(conv2d(conv1_norm, W2_conv + b2_conv))
-    conv2 = maxpool2d(conv2)
-    conv2 = tf.nn.dropout(conv2, keep_rate)
+
+    conv2 = tf.nn.elu(conv2d(conv1_norm, W2_conv + b2_conv,'SAME'))
+    conv2 = maxpool2d(conv2, 'SAME')
+
+
+
+    conv3 = tf.nn.elu(conv2d(conv2, W3_conv + b3_conv, 'SAME'))
+    conv3 = maxpool2d(conv3, 'SAME')
+    conv3 = tf.nn.dropout(conv3, 0.2)
+
+
+
 
     # Fully Conncected Layer
-    fc = tf.reshape(conv2, [-1, 7 * 7 * 64])
-    fc = tf.nn.elu(tf.matmul(fc, W3 + b3))
-    fc = tf.nn.dropout(fc, keep_rate)
+    fc = tf.reshape(conv3, [-1, 512])
+    fc = tf.nn.dropout(fc, 0.5)
+    fc = tf.nn.elu(tf.matmul(fc, W4 + b4))
 
 
     l5 = tf.matmul(fc, W5) + b5
@@ -102,22 +125,26 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
 
     # Predictions
     output = tf.add(tf.matmul(final_logits, out_w), out_b, name='output')
+    print(output)
+    print(y)
 
     # Cost function
     cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=output, name='loss'))
+    print(y)
     tf.summary.scalar("cost", cost)
 
     # Validation cost
     validation_cost = cost
     tf.summary.scalar("validation_cost", validation_cost)
 
-    # Optimizer
-    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost, name='optimizer')
 
     # Correct Predictions and Accuracy
     correct_prediction = tf.equal(tf.argmax(output, 1), tf.argmax(y, 1), name='correct_prediction')
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32), name='accuracy')
     tf.summary.scalar("accuracy", accuracy)
+
+    # Optimizer
+    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost, name='optimizer')
 
     # merge all summaries into a single "operation" which we can execute in a session
     summary_op = tf.summary.merge_all()
@@ -148,12 +175,15 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
             epoch_start = time.time()
 
             batch_count = int(len(X_train) / batch_size)
+            print(batch_count)
             total_loss = 0
-            for i in range(int(len(X_train) / batch_size)):
+            for i in range(batch_count):
                 randidx = np.random.randint(len(X_train), size=batch_size)
 
                 batch_x = np.array(X_train)[randidx]
                 batch_y = np.array(y_train)[randidx]
+                print(batch_y.shape)
+                print(batch_x.shape)
 
                 # perform the operations we defined earlier on batch
                 _, summary, c = sess.run([optimizer, summary_op, cost], feed_dict={x: batch_x, y: batch_y})
@@ -165,10 +195,11 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
 
             print("Testing Accuracy:", sess.run(accuracy, feed_dict={x: X_test, y: y_test}))
 
+
             print("Validation Loss:", sess.run(validation_cost, feed_dict={x: X_test, y: y_test}))
 
-            print('Epoch ', epoch, ' completed out of ', training_epochs, ', loss: ', total_loss)
-            epoch_time = epoch_start - time.time()
+            print('Epoch ', epoch + 1, ' completed out of ', training_epochs, ', loss: ', total_loss)
+            epoch_time = time.time() - epoch_start
 
             print('Epoch time: {} seconds'.format(round(epoch_time, 0)))
             print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n')
@@ -185,8 +216,8 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
 
 
 def main():
-    total_loss, accuracy = convolutional_nn(epochs=3, learning_rate=.0000000000000000000001)
-    remove_logs()
+    total_loss, accuracy = convolutional_nn(epochs=10, learning_rate=.1)
+    # remove_logs()
 
 if __name__ == "__main__":
     main()
