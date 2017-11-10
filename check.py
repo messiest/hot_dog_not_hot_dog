@@ -58,7 +58,7 @@ def restore_model(tests, model_path):
 
 
 def main():
-    model_path = "conv_model/model.ckpt"
+    model_path = "saved_model/model.ckpt"
     file_path = ['hotdog.jpg', 'not_hotdog.jpg']
     image_check = input_parser(file_path)
     prediction = restore_model(image_check)
