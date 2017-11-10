@@ -42,5 +42,6 @@ def main():
 
     store_raw_images(paths, links)
 
+
 if __name__ == '__main__':
     main()
