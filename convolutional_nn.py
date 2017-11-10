@@ -1,32 +1,31 @@
-import tensorflow as tf
-import numpy as np
 import os
 import time
-# import image_bootstrapping as ib
+
+import numpy as np
+import tensorflow as tf
+
+import image_bootstrapping as ib
 
 start = time.time()
 
 def remove_logs():
     logs_length = len(os.listdir('logs'))
     logs = os.listdir('logs')
-    if  logs_length >= 1:
+    if logs_length >= 1:
         for i in range(logs_length - 1):
             os.remove(logs[i])
 
 
 def get_data():
-    import pandas as pd
-    from sklearn.model_selection import train_test_split
 
-    Y_ = pd.read_csv('Y_notFlat.csv').values
+    from sklearn.model_selection import train_test_split
+    X_, Y_ = ib.loadData(128, 15000)
+
     print('Y Done')
     print(np.array(Y_).shape)
-    X_ = pd.read_csv('X_notFlat.csv').values
-    print('X Done')
+    # X_ = pd.read_csv('X_clean.csv').values
 
-    # X_, Y_ = ib.loadData(128, 15000)
     print(X_.shape)
-
 
     X_ = np.array(X_).reshape(-1, 128, 128, 1)
 
@@ -43,14 +42,12 @@ def get_data():
 def conv2d(x, W, padding):
     return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding=padding)
 
-
-
 def maxpool2d(x, padding):
-    #                        size of window         movement of window
-    return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding=padding)
+    #                             size of window      movement of window
+    return tf.nn.max_pool(x, ksize=[1, 4, 4, 1], strides=[1, 4, 4, 1], padding=padding)
 
 def maxpool2d_dif(x, padding):
-    #                        size of window         movement of window
+    #                             size of window       movement of window
     return tf.nn.max_pool(x, ksize=[1, 4, 4, 1], strides=[1, 4, 4, 1], padding=padding)
 
 
@@ -63,11 +60,11 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
 
     # Config
     model_path = "conv_model/model.ckpt"
-    batch_size = 1
+    batch_size = 128
     logs_path = "logs"
     training_epochs = epochs
     learning_rate = learning_rate
-    n_classes = 128
+    n_classes = 2
     input_dim = [None, 128, 128, 1]
     keep_rate = 0.3
 
@@ -76,6 +73,8 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
 
     # Placeholders
     x = tf.placeholder('float', shape=input_dim, name='x_placeholder')
+    x = tf.reshape(x, [-1, 128, 128, 1])
+
     y = tf.placeholder('float', shape=[None, n_classes], name='y_placeholder')
     y = tf.reshape(y, [-1, 2])
 
@@ -100,8 +99,6 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
     conv1 = maxpool2d_dif(conv1, 'VALID')
     conv1_norm = tf.nn.local_response_normalization(conv1)
 
-
-
     conv2 = tf.nn.elu(conv2d(conv1_norm, W2_conv + b2_conv,'SAME'))
     conv2 = maxpool2d(conv2, 'SAME')
 
@@ -110,8 +107,6 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
     conv3 = tf.nn.elu(conv2d(conv2, W3_conv + b3_conv, 'SAME'))
     conv3 = maxpool2d(conv3, 'SAME')
     conv3 = tf.nn.dropout(conv3, 0.2)
-
-
 
 
     # Fully Conncected Layer
@@ -126,12 +121,9 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
 
     # Predictions
     output = tf.add(tf.matmul(final_logits, out_w), out_b, name='output')
-    print(output)
-    print(y)
 
     # Cost function
     cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=output, name='loss'))
-    print(y)
     tf.summary.scalar("cost", cost)
 
     # Validation cost
@@ -183,8 +175,6 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
 
                 batch_x = np.array(X_train)[randidx]
                 batch_y = np.array(y_train)[randidx]
-                print(batch_y.shape)
-                print(batch_x.shape)
 
                 # perform the operations we defined earlier on batch
                 _, summary, c = sess.run([optimizer, summary_op, cost], feed_dict={x: batch_x, y: batch_y})
@@ -217,7 +207,7 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
 
 
 def main():
-    total_loss, accuracy = convolutional_nn()
+    total_loss, accuracy = convolutional_nn(epochs=5)
     # remove_logs()
 
 if __name__ == "__main__":

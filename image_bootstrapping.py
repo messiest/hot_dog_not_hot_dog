@@ -1,7 +1,9 @@
-import numpy as np
-import cv2
 import glob
+
+import cv2
+import numpy as np
 from sklearn.preprocessing import OneHotEncoder
+
 
 def rotateImage(img, angle):
     (rows, cols) = img.shape
@@ -102,16 +104,7 @@ def loadData(img_size, classSize):
     print(np.array(X).shape)
     print(np.array(y).shape)
 
-    import pandas as pd
-
-    X = pd.DataFrame.from_records(X)
-    X.to_csv("X_notFlat.csv")
-
-    # np.savetxt("X_notFlat.csv", X, delimiter=",")
-
-    np.savetxt("Y_notFlat.csv", y, delimiter=",")
 
     return X, y
 
 print('Starting Bootstrap')
-X_, Y_ = loadData(128, 15000)
