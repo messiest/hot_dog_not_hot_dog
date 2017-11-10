@@ -12,6 +12,7 @@ def remove_logs():
     if  logs_length >= 1:
         for i in range(logs_length - 1):
             os.remove(logs[i])
+            print('for')
 
 def get_data():
     import pandas as pd
