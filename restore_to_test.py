@@ -1,65 +1,65 @@
-import tensorflow as tf
-import pandas as pd
 import itertools
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, roc_auc_score
-import seaborn as sns
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import tensorflow as tf
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, roc_auc_score
+from sklearn.model_selection import train_test_split
 
-model_path = "conv_model/model.ckpt"
-
-X_ = pd.read_csv('X.csv').values
-Y_ = pd.read_csv('Y.csv').values
-
-X_ = np.array(X_).reshape(-1, 28, 28, 1)
-
-X_train, X_test, y_train, y_test = train_test_split(X_, Y_, test_size=0.2, random_state=42)
-
-init = tf.global_variables_initializer()
-
-predictions =[]
-
-with tf.Session() as sess:
-    saver = tf.train.import_meta_graph(model_path + '.meta')
-    saver.restore(sess, model_path)
-    # access a variable from the saved Graph, and so on:
-
-    graph = tf.get_default_graph()
-    cost = graph.get_tensor_by_name("loss:0")
-    accuracy = graph.get_tensor_by_name('accuracy:0')
-    x = graph.get_tensor_by_name('x_placeholder:0')
-    y = graph.get_tensor_by_name('y_placeholder:0')
-    output = graph.get_tensor_by_name('output:0')
-    correct_prediction = graph.get_tensor_by_name('correct_prediction:0')
-
-    cp, a, o = sess.run([correct_prediction, accuracy, tf.argmax(output, 1)], feed_dict={x: X_test, y: y_test})
-
-    predictions.append(o)
+import image_bootstrapping as ib
 
 
+def model_predictions():
+    model_path = "conv_model/model.ckpt"
+
+    X_, Y_ = ib.load_data(128, 15000)
+
+    X_ = np.array(X_).reshape(-1, 128, 128, 1)
+
+    X_train, X_test, y_train, y_test = train_test_split(X_, Y_, test_size=0.2, random_state=42)
+
+    print()
+
+    init = tf.global_variables_initializer()
+
+    predictions = []
+
+    with tf.Session() as sess:
+        saver = tf.train.import_meta_graph(model_path + '.meta')
+        saver.restore(sess, model_path)
+        # access a variable from the saved Graph, and so on:
+
+        graph = tf.get_default_graph()
+        cost = graph.get_tensor_by_name("loss:0")
+        accuracy = graph.get_tensor_by_name('accuracy:0')
+        x = graph.get_tensor_by_name('x_placeholder:0')
+        y = graph.get_tensor_by_name('y_placeholder:0')
+        output = graph.get_tensor_by_name('output:0')
+        correct_prediction = graph.get_tensor_by_name('correct_prediction:0')
+
+        cp, a, o = sess.run([correct_prediction, accuracy, tf.argmax(output, 1)], feed_dict={x: X_test, y: y_test})
+
+        predictions.append(o)
+
+    actuals = [y[1] for y in y_test]
+    actuals = np.array(actuals)
+
+    predictions = np.array(predictions).reshape(6000, )
+
+    print(predictions.shape)
+    print(actuals.shape)
+
+    cnf_matrix = confusion_matrix(actuals, predictions)
+
+    return predictions, actuals, cnf_matrix
 
 
-actuals = [y[1] for y in y_test]
-actuals = np.array(actuals)
-
-predictions = np.array(predictions).reshape(6000,)
-
-
-print(predictions.shape)
-print(actuals.shape)
-
-y_pred = predictions
-y_test = actuals
-class_names = ['Not Hotdog', 'Hotdog']
-
-# Set font and graph size
-sns.set(font_scale=1.5)
-# Compute confusion matrix
-cnf_matrix = confusion_matrix(y_test, y_pred)
-np.set_printoptions(precision=2)
-def print_cm(cm, labels=class_names, hide_zeroes=False, hide_diagonal=False, hide_threshold=None):
+def print_cm(cm, labels, hide_zeroes=False, hide_diagonal=False, hide_threshold=None):
     """pretty print for confusion matrixes"""
+    # Set font and graph size
+    sns.set(font_scale=1.5)
+    np.set_printoptions(precision=2)
     columnwidth = max([len(x) for x in labels] + [5])  # 5 is value length
     empty_cell = " " * columnwidth
     # Print header
@@ -81,8 +81,7 @@ def print_cm(cm, labels=class_names, hide_zeroes=False, hide_diagonal=False, hid
             print(cell)
 
 
-
-def plot_confusion_matrix(cm, classes,
+def plot_confusion_matrix(cm, y_test, y_pred, class_names, classes,
                           normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
@@ -121,17 +120,29 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-# Print accuracy and precision
-print('Accuracy: ', accuracy_score(y_test, y_pred, normalize=True))
-print('Precision: ', precision_score(y_test, y_pred, average='macro'))
-print('Roc-Auc: ', roc_auc_score(y_test, y_pred))
-# Plot non-normalized confusion matrix
-plt.figure()
-plot_confusion_matrix(cnf_matrix, classes=class_names,
-                      title='Confusion matrix, without normalization')
-# Plot normalized confusion matrix
-plt.figure()
-plot_confusion_matrix(cnf_matrix, classes=class_names, normalize=True,
-                      title='Normalized confusion matrix')
-plt.show()
 
+    # Print accuracy and precision
+    print('Accuracy: ', accuracy_score(y_test, y_pred, normalize=True))
+    print('Precision: ', precision_score(y_test, y_pred, average='macro'))
+    print('Roc-Auc: ', roc_auc_score(y_test, y_pred))
+    # Plot non-normalized confusion matrix
+    plt.figure()
+    plot_confusion_matrix(cm, classes=class_names,
+                          title='Confusion matrix, without normalization')
+    # Plot normalized confusion matrix
+    plt.figure()
+    plot_confusion_matrix(cm, classes=class_names, normalize=True,
+                          title='Normalized confusion matrix')
+    plt.show()
+
+
+def main():
+    class_names = ['Not Hotdog', 'Hotdog']
+    classes = 2
+    y_test, y_pred, cm = model_predictions()
+    print_cm(cm, class_names)
+    plot_confusion_matrix(cm, y_test, y_pred, class_names, classes)
+
+
+if __name__ == "__main__":
+    main()
