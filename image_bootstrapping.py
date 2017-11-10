@@ -102,11 +102,16 @@ def loadData(img_size, classSize):
     print(np.array(X).shape)
     print(np.array(y).shape)
 
-    # np.savetxt("X.csv", X, delimiter=",")
-    #
-    # np.savetxt("Y.csv", y, delimiter=",")
+    import pandas as pd
+
+    X = pd.DataFrame.from_records(X)
+    X.to_csv("X_notFlat.csv")
+
+    # np.savetxt("X_notFlat.csv", X, delimiter=",")
+
+    np.savetxt("Y_notFlat.csv", y, delimiter=",")
 
     return X, y
 
 print('Starting Bootstrap')
-# X_, Y_ = loadData(128, 15000)
+X_, Y_ = loadData(128, 15000)

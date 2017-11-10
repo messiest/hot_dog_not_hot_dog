@@ -12,16 +12,16 @@ def remove_logs():
     if  logs_length >= 1:
         for i in range(logs_length - 1):
             os.remove(logs[i])
-            print('for')
+
 
 def get_data():
     import pandas as pd
     from sklearn.model_selection import train_test_split
 
-    Y_ = pd.read_csv('Y.csv').values
+    Y_ = pd.read_csv('Y_notFlat.csv').values
     print('Y Done')
     print(np.array(Y_).shape)
-    X_ = pd.read_csv('X.csv').values
+    X_ = pd.read_csv('X_notFlat.csv').values
     print('X Done')
 
     # X_, Y_ = ib.loadData(128, 15000)
@@ -217,7 +217,7 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
 
 
 def main():
-    total_loss, accuracy = convolutional_nn(epochs=10, learning_rate=.1)
+    total_loss, accuracy = convolutional_nn()
     # remove_logs()
 
 if __name__ == "__main__":
