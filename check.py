@@ -61,7 +61,6 @@ def main():
     model_path = "conv_model/model.ckpt"
     file_path = ['hotdog.jpg', 'not_hotdog.jpg']
     image_check = input_parser(file_path)
-<<<<<<< HEAD
     prediction = restore_model(image_check)
     print('Hotdog test')
     print('------------ \n')
@@ -86,7 +85,6 @@ def main():
         guess = 'not a hotdog'
         print('This is ', guess, ' and my NN was right!.')
     print('\n \n')
-=======
     prediction = restore_model(image_check, model_path)
 
     for i in range(len(prediction)):
@@ -111,7 +109,6 @@ def main():
             guess = 'not a hotdog'
             print('This is ', guess, ' and my NN was right!.')
         print('\n \n')
->>>>>>> 39fb8e7185e2e31d91dc410e0f85970aa3f973ef
 
 
 if __name__ == "__main__":
