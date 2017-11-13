@@ -7,7 +7,7 @@ import cv2
 # Go to image.net find your images then click download image urls
 # Add that pages url to links
 
-def store_raw_images(folders, links):
+def get_images(folders, links):
     pic_num = 1
     for link, folder in zip(links, folders):
         if not os.path.exists(folder):
@@ -30,17 +30,10 @@ def store_raw_images(folders, links):
 
 
 def main():
-    links = [
-        'http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n07865105',
-        'http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n07690019',
-        'http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n07697537'
-    ]
+    links = ['http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n01846331']
+    paths = ['ducks']
 
-
-
-    paths = ['chili_dog', 'frankfurter', 'hot_dog']
-
-    store_raw_images(paths, links)
+    get_images(paths, links)
 
 
 if __name__ == '__main__':

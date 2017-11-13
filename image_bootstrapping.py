@@ -1,5 +1,4 @@
 import glob
-
 import cv2
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
@@ -79,16 +78,16 @@ def load_img_class(class_path, class_label, class_size, img_size):
 
 
 def load_data(img_size, class_size):
-    hotdogs = glob.glob('../hotdog/**/*.jpg', recursive=True)
+    ducks = glob.glob('ducks/*.jpg', recursive=True)
 
-    not_hotdogs = glob.glob('../not-hotdog/**/*.jpg', recursive=True)
+    # not_hotdogs = glob.glob('../not-hotdog/**/*.jpg', recursive=True)
 
     img_size = (img_size, img_size)
 
-    x_hotdog, y_hotdog = load_img_class(hotdogs, 0, class_size, img_size)
+    x_hotdog, y_hotdog = load_img_class(ducks, 0, class_size, img_size)
     print('Hotdogs Bootstrapped')
 
-    x_not_hotdog, y_not_hotdog = load_img_class(not_hotdogs, 1, class_size, img_size)
+    x_not_hotdog, y_not_hotdog = load_img_class(ducks, 1, class_size, img_size)
     print('Not Hotdogs Bootstrapped')
 
     print("There are", len(x_hotdog), "hotdog images")

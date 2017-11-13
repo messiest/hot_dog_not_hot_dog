@@ -3,3 +3,5 @@
 *.csv
 .idea/
 logs/
+*.jpg
+*.csv

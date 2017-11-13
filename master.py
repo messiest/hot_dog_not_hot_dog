@@ -7,7 +7,7 @@ def main():
     x, y = bs.load_data(128, 15000)
     x, y = cnn.get_data(x, y)
     cnn.convolutional_nn(epochs=5, learning_rate=0.0001)
-    rest_test.
+    # rest_test.
 
 
 if __name__ == "__main__":
