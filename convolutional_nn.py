@@ -1,4 +1,3 @@
-import os
 import time
 
 import numpy as np
@@ -6,14 +5,6 @@ import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
 start = time.time()
-
-
-def remove_logs():
-    logs_length = len(os.listdir('logs'))
-    logs = os.listdir('logs')
-    if logs_length >= 1:
-        for i in range(logs_length - 1):
-            os.remove(logs[i])
 
 
 def get_data(X_, Y_):
@@ -56,7 +47,7 @@ def run(X_, Y_, epochs=10, learning_rate=0.01):
 
     # Config
     model_path = "conv_model/model.ckpt"
-    batch_size = 32
+    batch_size = 64
     logs_path = "logs"
     training_epochs = epochs
     learning_rate = learning_rate

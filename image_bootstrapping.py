@@ -47,13 +47,13 @@ def load_img_class(class_path, class_label, class_size, img_size):
 
     #
     for path in class_path:
-        img = np.array(load_rotate__blur_img(path, img_size))
+        img = np.array(load_img(path, img_size))
         x.append(img)
         y.append(class_label)
 
     while len(x) < class_size / 4:
         rand_idx = np.random.randint(0, len(class_path))
-        img = np.array(load_rotate__blur_img(class_path[rand_idx], img_size))
+        img = np.array(load_rotate(class_path[rand_idx], img_size))
         x.append(img)
         y.append(class_label)
 
@@ -65,13 +65,13 @@ def load_img_class(class_path, class_label, class_size, img_size):
 
     while len(x) < class_size * (3 / 4):
         rand_idx = np.random.randint(0, len(class_path))
-        img = np.array(load_rotate(class_path[rand_idx], img_size))
+        img = np.array(load_rotate__blur_img(class_path[rand_idx], img_size))
         x.append(img)
         y.append(class_label)
 
     while len(x) < class_size:
         rand_idx = np.random.randint(0, len(class_path))
-        img = np.array(load_img(class_path[rand_idx], img_size))
+        img = np.array(load_rotate__blur_img(class_path[rand_idx], img_size))
         x.append(img)
         y.append(class_label)
 
