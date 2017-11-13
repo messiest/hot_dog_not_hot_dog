@@ -3,5 +3,20 @@
 *.csv
 .idea/
 logs/
+<<<<<<< HEAD
 *.jpg
 *.csv
+=======
+__pycache__/
+
+/humans/
+/furniture/
+/animals/
+/vehichle/
+/sports/
+/not_hotdog/
+/chili_dog/
+/frankfurter/
+/hotdog/
+/hot_dog/
+>>>>>>> 57281270cde3ce497c5976732e99bad20dd91ba5

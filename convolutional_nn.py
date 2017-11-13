@@ -1,40 +1,25 @@
-import os
 import time
 
 import numpy as np
 import tensorflow as tf
+from sklearn.model_selection import train_test_split
 
 start = time.time()
 
 
-def remove_logs():
-    logs_length = len(os.listdir('logs'))
-    logs = os.listdir('logs')
-    if logs_length >= 1:
-        for i in range(logs_length - 1):
-            os.remove(logs[i])
-
-
 def get_data(X_, Y_):
-    from sklearn.model_selection import train_test_split
-
-
     print('Y Done')
     print(np.array(Y_).shape)
     # X_ = pd.read_csv('X_clean.csv').values
 
     print(X_.shape)
 
-    X_ = np.array(X_).reshape(-1, 128, 128, 1)
-
-    print(X_.shape)
-    X_train, X_test, y_train, y_test = train_test_split(X_, Y_, test_size=0.2, random_state=42)
-
     data_time = time.time() - start
 
     print('Images Read: {} seconds'.format(round(data_time, 0)))
 
-    return X_train, X_test, y_train, y_test
+    return X_, Y_
+
 
 def conv2d(x, W, padding):
     return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding=padding)
@@ -50,15 +35,19 @@ def maxpool2d_dif(x, padding):
     return tf.nn.max_pool(x, ksize=[1, 4, 4, 1], strides=[1, 4, 4, 1], padding=padding)
 
 
-def convolutional_nn(epochs=10, learning_rate=0.01):
+def run(X_, Y_, epochs=10, learning_rate=0.01):
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+    print('Starting Convolutional Neural Network')
     nn_start = time.time()
 
+    X_ = np.array(X_).reshape(-1, 128, 128, 1)
+
     # Get data and TTS
-    X_train, X_test, y_train, y_test = get_data()
+    X_train, X_test, y_train, y_test = train_test_split(X_, Y_, test_size=0.2, random_state=42)
 
     # Config
     model_path = "conv_model/model.ckpt"
-    batch_size = 32
+    batch_size = 64
     logs_path = "logs"
     training_epochs = epochs
     learning_rate = learning_rate
@@ -197,12 +186,3 @@ def convolutional_nn(epochs=10, learning_rate=0.01):
         print('Total time: {} seconds'.format(round(total_time, 0)))
 
         return total_loss, accuracy
-
-
-def main():
-    total_loss, accuracy = convolutional_nn(epochs=5, learning_rate=0.0001)
-    # remove_logs()
-
-
-if __name__ == "__main__":
-    main()

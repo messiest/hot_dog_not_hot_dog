@@ -1,17 +1,14 @@
-import tensorflow as tf
-import os
-import numpy as np
 import cv2
+import numpy as np
+import tensorflow as tf
 
 
 def input_parser(filenames):
-
     tests = []
 
     for file_path in filenames:
-
         images = []
-        image_size = 28
+        image_size = 128
         image = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
 
         # Resizing the image to our desired size and
@@ -20,9 +17,7 @@ def input_parser(filenames):
         images.append(image)
         images = np.array(images, dtype=np.uint8)
         images = images.astype('float32')
-
-        images = images.ravel()
-        X_check = images.reshape(28, 28, 1)
+        X_check = images.reshape(-1, image_size, image_size, 1)
 
         tests.append(X_check)
 
@@ -37,11 +32,10 @@ def restore_model(tests, model_path):
     y_hats = []
 
     for test in tests:
-
+        test = np.array(test).reshape(-1, 128, 128, 1)
         with tf.Session() as sess:
             saver = tf.train.import_meta_graph(model_path + '.meta')
             saver.restore(sess, model_path)
-            # access a variable from the saved Graph, and so on:
 
             graph = tf.get_default_graph()
 
@@ -57,6 +51,7 @@ def restore_model(tests, model_path):
         return y_hats
 
 
+<<<<<<< HEAD
 def main():
     model_path = "saved_model/model.ckpt"
     file_path = ['hotdog.jpg', 'not_hotdog.jpg']
@@ -86,17 +81,24 @@ def main():
         print('This is ', guess, ' and my NN was right!.')
     print('\n \n')
     prediction = restore_model(image_check, model_path)
+=======
+def run(model_path):
+    model_path = model_path
+    file_path = ['hotdog.jpg', 'not_hotdog.jpg']
+    tests = input_parser(file_path)
+    prediction = restore_model(tests, model_path)
+>>>>>>> 57281270cde3ce497c5976732e99bad20dd91ba5
 
     for i in range(len(prediction)):
         print('Hotdog test')
         print('------------ \n')
         if prediction[i][0]:
             guess = 'Hotdog'
-            print('This is a ', guess, '! My NN was right.')
+            print('This is a ', guess, '! My CNN was right.')
         else:
             guess = 'not a hotdog'
-            print('This is ', guess, ' and my NN was wrong.')
-        print('\n')
+            print('This is ', guess, ' and my CNN was wrong.')
+        print('\t')
         print('\n')
 
         print('Not hotdog test')
@@ -104,12 +106,8 @@ def main():
 
         if prediction[i][0] == True:
             guess = 'Hotdog'
-            print('This is a ', guess, ' :( My NN was wrong.')
+            print('This is a ', guess, ' :( My CNN was wrong.')
         else:
             guess = 'not a hotdog'
-            print('This is ', guess, ' and my NN was right!.')
+            print('This is ', guess, ' and my CNN was right!.')
         print('\n \n')
-
-
-if __name__ == "__main__":
-    main()
