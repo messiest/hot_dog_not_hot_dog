@@ -79,19 +79,20 @@ def load_img_class(class_path, class_label, class_size, img_size):
 
 
 def load_data(img_size, class_size):
-    print('Starting Bootstrap')
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+    print('Starting Image Augmentation')
 
-    hotdogs = glob.glob('../hotdog/**/*.jpg', recursive=True)
+    hotdogs = glob.glob('hotdog/**/*.jpg', recursive=True)
 
-    not_hotdogs = glob.glob('../not-hotdog/**/*.jpg', recursive=True)
+    not_hotdogs = glob.glob('not_hotdog/**/*.jpg', recursive=True)
 
     img_size = (img_size, img_size)
 
     x_hotdog, y_hotdog = load_img_class(hotdogs, 0, class_size, img_size)
-    print('Hotdogs Bootstrapped')
+    print('Hotdogs Images Augmented')
 
     x_not_hotdog, y_not_hotdog = load_img_class(not_hotdogs, 1, class_size, img_size)
-    print('Not Hotdogs Bootstrapped')
+    print('Not Hotdogs Images Augmented')
 
     print("There are", len(x_hotdog), "hotdog images")
     print("There are", len(x_not_hotdog), "not hotdog images")
@@ -107,7 +108,7 @@ def load_data(img_size, class_size):
 
     X = (X - X.min(0)) / X.ptp(0)
 
-    print(np.array(X).shape)
-    print(np.array(y).shape)
+    print('x tensor shape: '.format(np.array(X).shape))
+    print('y tensor shape: '.format(np.array(y).shape))
 
     return X, y

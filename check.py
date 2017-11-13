@@ -62,10 +62,10 @@ def run(model_path):
         print('------------ \n')
         if prediction[i][0]:
             guess = 'Hotdog'
-            print('This is a ', guess, '! My NN was right.')
+            print('This is a ', guess, '! My CNN was right.')
         else:
             guess = 'not a hotdog'
-            print('This is ', guess, ' and my NN was wrong.')
+            print('This is ', guess, ' and my CNN was wrong.')
         print('\t')
         print('\n')
 
@@ -74,8 +74,8 @@ def run(model_path):
 
         if prediction[i][0] == True:
             guess = 'Hotdog'
-            print('This is a ', guess, ' :( My NN was wrong.')
+            print('This is a ', guess, ' :( My CNN was wrong.')
         else:
             guess = 'not a hotdog'
-            print('This is ', guess, ' and my NN was right!.')
+            print('This is ', guess, ' and my CNN was right!.')
         print('\n \n')

@@ -36,11 +36,11 @@ def maxpool2d_dif(x, padding):
 
 
 def run(X_, Y_, epochs=10, learning_rate=0.01):
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n')
+    print('Starting Convolutional Neural Network')
     nn_start = time.time()
 
     X_ = np.array(X_).reshape(-1, 128, 128, 1)
-
-    print(X_.shape)
 
     # Get data and TTS
     X_train, X_test, y_train, y_test = train_test_split(X_, Y_, test_size=0.2, random_state=42)
