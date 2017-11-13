@@ -1,6 +1,8 @@
 import os
 import urllib.request
+
 import cv2
+
 
 # credit to kmather73 from github for some of this code
 
@@ -29,7 +31,7 @@ def store_raw_images(folders, links):
                 print(str(e))
 
 
-def main():
+def read_images_to_folder():
     links = [
         'http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n07865105',
         'http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n07690019',
@@ -41,6 +43,3 @@ def main():
     paths = ['chili_dog', 'frankfurter', 'hot_dog']
 
     store_raw_images(paths, links)
-
-if __name__ == '__main__':
-    main()

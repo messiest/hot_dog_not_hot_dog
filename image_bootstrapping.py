@@ -47,7 +47,7 @@ def load_img_class(class_path, class_label, class_size, img_size):
 
     #
     for path in class_path:
-        img = np.array(load_img(path, img_size))
+        img = np.array(load_rotate__blur_img(path, img_size))
         x.append(img)
         y.append(class_label)
 
@@ -79,6 +79,8 @@ def load_img_class(class_path, class_label, class_size, img_size):
 
 
 def load_data(img_size, class_size):
+    print('Starting Bootstrap')
+
     hotdogs = glob.glob('../hotdog/**/*.jpg', recursive=True)
 
     not_hotdogs = glob.glob('../not-hotdog/**/*.jpg', recursive=True)
@@ -109,6 +111,3 @@ def load_data(img_size, class_size):
     print(np.array(y).shape)
 
     return X, y
-
-
-print('Starting Bootstrap')

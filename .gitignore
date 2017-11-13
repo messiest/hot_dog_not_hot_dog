@@ -3,3 +3,8 @@
 *.csv
 .idea/
 logs/
+/image_cleaner.py
+/test5.py
+__pycache__/
+chili_dog/
+to_csv.py

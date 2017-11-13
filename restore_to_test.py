@@ -7,21 +7,13 @@ import tensorflow as tf
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 
-import image_bootstrapping as ib
 
-
-def model_predictions():
-    model_path = "conv_model/model.ckpt"
-
-    X_, Y_ = ib.load_data(128, 15000)
+def model_predictions(X_, Y_, model_path):
+    model_path = model_path
 
     X_ = np.array(X_).reshape(-1, 128, 128, 1)
 
     X_train, X_test, y_train, y_test = train_test_split(X_, Y_, test_size=0.2, random_state=42)
-
-    print()
-
-    init = tf.global_variables_initializer()
 
     predictions = []
 
@@ -81,7 +73,7 @@ def print_cm(cm, labels, hide_zeroes=False, hide_diagonal=False, hide_threshold=
             print(cell)
 
 
-def plot_confusion_matrix(cm, y_test, y_pred, class_names, classes,
+def plot_confusion_matrix(cm, y_test, y_pred, class_names,
                           normalize=False,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
@@ -102,9 +94,9 @@ def plot_confusion_matrix(cm, y_test, y_pred, class_names, classes,
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()
-    tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=45)
-    plt.yticks(tick_marks, classes)
+    tick_marks = np.arange(len(class_names))
+    plt.xticks(tick_marks, class_names, rotation=45)
+    plt.yticks(tick_marks, class_names)
     fmt = '.2f' if normalize else 'd'
     thresh = cm.max() / 2.
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
@@ -126,23 +118,17 @@ def plot_confusion_matrix(cm, y_test, y_pred, class_names, classes,
     print('Precision: ', precision_score(y_test, y_pred, average='macro'))
     print('Roc-Auc: ', roc_auc_score(y_test, y_pred))
     # Plot non-normalized confusion matrix
+
+
+def run_test(X_, Y_, model_path):
+    class_names = ['Not Hotdog', 'Hotdog']
+    y_test, y_pred, cm = model_predictions(X_, Y_, model_path)
+    print_cm(cm, class_names)
     plt.figure()
-    plot_confusion_matrix(cm, classes=class_names,
+    plot_confusion_matrix(cm, y_test, y_pred, class_names=class_names,
                           title='Confusion matrix, without normalization')
     # Plot normalized confusion matrix
     plt.figure()
-    plot_confusion_matrix(cm, classes=class_names, normalize=True,
+    plot_confusion_matrix(cm, y_test, y_pred, class_names=class_names, normalize=True,
                           title='Normalized confusion matrix')
     plt.show()
-
-
-def main():
-    class_names = ['Not Hotdog', 'Hotdog']
-    classes = 2
-    y_test, y_pred, cm = model_predictions()
-    print_cm(cm, class_names)
-    plot_confusion_matrix(cm, y_test, y_pred, class_names, classes)
-
-
-if __name__ == "__main__":
-    main()
