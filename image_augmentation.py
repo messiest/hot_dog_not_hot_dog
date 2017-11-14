@@ -108,7 +108,7 @@ def load_data(img_size, class_size):
 
     X = (X - X.min(0)) / X.ptp(0)
 
-    print('x tensor shape: '.format(np.array(X).shape))
-    print('y tensor shape: '.format(np.array(y).shape))
+    print('x tensor shape: {}'.format(np.array(X).shape))
+    print('y tensor shape: {}'.format(np.array(y).shape))
 
     return X, y

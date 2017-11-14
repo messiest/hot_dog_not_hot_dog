@@ -1,6 +1,9 @@
+import os
 import time
 
 import numpy as np
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
@@ -53,13 +56,25 @@ def run(X_, Y_, epochs=10, learning_rate=0.01):
     batch_size = 64
     logs_path = "logs"
     training_epochs = epochs
-    learning_rate = learning_rate
+    initial_learning_rate = learning_rate
     n_classes = 2
     input_dim = [None, 128, 128, 1]
     keep_rate = 0.3
 
     # Reset Graph
     tf.reset_default_graph()
+
+    # global step
+    global_step = tf.Variable(0, name="global_step", trainable=False)
+
+    # learning rate policy
+    decay_steps = int(len(X_train) / batch_size)
+    learning_rate = tf.train.exponential_decay(initial_learning_rate,
+                                               global_step,
+                                               decay_steps,
+                                               decay_rate=0.96,
+                                               staircase=True,
+                                               name='exponential_decay_learning_rate')
 
     # Placeholders
     x = tf.placeholder('float', shape=input_dim, name='x_placeholder')
@@ -112,6 +127,10 @@ def run(X_, Y_, epochs=10, learning_rate=0.01):
     cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=output, name='loss'))
     tf.summary.scalar("cost", cost)
 
+    auc = tf.metrics.auc(labels=y, predictions=output, name='auc')
+    tf.summary.scalar("auc", auc)
+    tf.summary.histogram('Hist Auc', auc)
+
     # Validation cost
     validation_cost = cost
     tf.summary.scalar("validation_cost", validation_cost)
@@ -125,7 +144,8 @@ def run(X_, Y_, epochs=10, learning_rate=0.01):
 
     # Optimizer
     optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost,
-                                                               aggregation_method=tf.AggregationMethod.EXPERIMENTAL_ACCUMULATE_N,
+                                                               # aggregation_method=tf.AggregationMethod.EXPERIMENTAL_TREE,
+                                                               global_step=global_step,
                                                                name='optimizer')
 
     # merge all summaries into a single "operation" which we can execute in a session
@@ -134,8 +154,8 @@ def run(X_, Y_, epochs=10, learning_rate=0.01):
     # Save only one model
     saver = tf.train.Saver(max_to_keep=1)
 
-    config = tf.ConfigProto(inter_op_parallelism_threads=1,
-                            intra_op_parallelism_threads=1)
+    config = tf.ConfigProto(inter_op_parallelism_threads=44,
+                            intra_op_parallelism_threads=44)
 
     init = tf.global_variables_initializer()
 
@@ -165,34 +185,42 @@ def run(X_, Y_, epochs=10, learning_rate=0.01):
             batch_count = int(len(X_train) / batch_size)
             print('Number of Batches: ', batch_count)
             total_loss = 0
-            for i in range(batch_count):
+            for step in range(batch_count):
                 randidx = np.random.randint(len(X_train), size=batch_size)
 
                 batch_x = np.array(X_train)[randidx]
                 batch_y = np.array(y_train)[randidx]
 
                 # perform the operations we defined earlier on batch
-                _, summary, c = sess.run([optimizer, summary_op, cost], feed_dict={x: batch_x, y: batch_y})
+                _, summary, c, training_step, lr = sess.run([optimizer, summary_op, cost, global_step, learning_rate],
+                                                            feed_dict={x: batch_x, y: batch_y})
 
                 total_loss += c
+                print('Current Step: ', step)
 
                 # write log
-                writer.add_summary(summary, epoch * batch_count + i)
+                writer.add_summary(summary, global_step=step)
+
+            print('~~~~~~~~~~~~~~~~~~~~\n')
+
+            print('Current Learning Rate: ', lr)
 
             print("Testing Accuracy:", sess.run(accuracy, feed_dict={x: X_test, y: y_test}))
+
+            print("Testing AUC:", sess.run(auc, feed_dict={x: X_test, y: y_test}))
 
             print("Validation Loss:", sess.run(validation_cost, feed_dict={x: X_test, y: y_test}))
 
             print('Epoch ', epoch + 1, ' completed out of ', training_epochs, ', loss: ', total_loss)
+
             epoch_time = time.time() - epoch_start
             if epoch_time >= 60:
                 epoch_time = epoch_time / 60
-                print('Graph Built: {} minutes'.format(round(epoch_time, 0)))
+                print('Epoch Time: {} minutes'.format(round(epoch_time, 0)))
                 print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n')
             else:
-                print('Graph Built: {} seconds'.format(round(epoch_time, 0)))
-            print('Epoch time: {} seconds'.format(round(epoch_time, 0)))
-            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n')
+                print('Epoch Time: {} seconds'.format(round(epoch_time, 0)))
+                print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n')
 
         # Save model
         save_path = saver.save(sess, model_path)
