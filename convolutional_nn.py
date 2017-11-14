@@ -8,15 +8,18 @@ start = time.time()
 
 
 def get_data(X_, Y_):
-    print('Y Done')
-    print(np.array(Y_).shape)
-    # X_ = pd.read_csv('X_clean.csv').values
-
-    print(X_.shape)
+    print('Y Shape: ', np.array(Y_).shape)
+    print('X Shape: ', X_.shape)
 
     data_time = time.time() - start
 
-    print('Images Read: {} seconds'.format(round(data_time, 0)))
+    if data_time >= 60:
+        data_time = data_time / 60
+        print('Import Data Time: {} minutes'.format(round(data_time, 0)))
+        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n')
+    else:
+        print('Import Data Time: {} seconds'.format(round(data_time, 0)))
+        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n')
 
     return X_, Y_
 
@@ -121,7 +124,9 @@ def run(X_, Y_, epochs=10, learning_rate=0.01):
     tf.summary.histogram('Hist Accuracy', accuracy)
 
     # Optimizer
-    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost, name='optimizer')
+    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(cost,
+                                                               aggregation_method=tf.AggregationMethod.EXPERIMENTAL_ACCUMULATE_N,
+                                                               name='optimizer')
 
     # merge all summaries into a single "operation" which we can execute in a session
     summary_op = tf.summary.merge_all()
@@ -129,13 +134,20 @@ def run(X_, Y_, epochs=10, learning_rate=0.01):
     # Save only one model
     saver = tf.train.Saver(max_to_keep=1)
 
+    config = tf.ConfigProto(inter_op_parallelism_threads=1,
+                            intra_op_parallelism_threads=1)
+
     init = tf.global_variables_initializer()
 
     graph_time = time.time() - nn_start
 
-    print('Graph Built: {} seconds'.format(round(graph_time, 0)))
+    if graph_time >= 60:
+        graph_time = graph_time / 60
+        print('Graph Built: {} minutes'.format(round(graph_time, 0)))
+    else:
+        print('Graph Built: {} seconds'.format(round(graph_time, 0)))
 
-    with tf.Session() as sess:
+    with tf.Session(config=config) as sess:
         print('Session Started')
         print('--------------- \n')
         # variables need to be initialized before we can use them
@@ -173,7 +185,12 @@ def run(X_, Y_, epochs=10, learning_rate=0.01):
 
             print('Epoch ', epoch + 1, ' completed out of ', training_epochs, ', loss: ', total_loss)
             epoch_time = time.time() - epoch_start
-
+            if epoch_time >= 60:
+                epoch_time = epoch_time / 60
+                print('Graph Built: {} minutes'.format(round(epoch_time, 0)))
+                print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n')
+            else:
+                print('Graph Built: {} seconds'.format(round(epoch_time, 0)))
             print('Epoch time: {} seconds'.format(round(epoch_time, 0)))
             print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n')
 
@@ -182,7 +199,12 @@ def run(X_, Y_, epochs=10, learning_rate=0.01):
         print("Model saved in file: %s" % save_path)
 
         total_time = time.time() - start
-
-        print('Total time: {} seconds'.format(round(total_time, 0)))
+        if total_time >= 60:
+            total_time = total_time / 60
+            print('Epoch Time: {} minutes'.format(round(total_time, 0)))
+            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n')
+        else:
+            print('Epoch Time: {} seconds'.format(round(total_time, 0)))
+            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \n')
 
         return total_loss, accuracy
