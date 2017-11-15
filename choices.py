@@ -17,7 +17,8 @@ model_path = "conv_model/model.ckpt"
 def choices():
     while True:
         print(
-            'Type "run_all" to run all scripts \nType "train" to just train model \nType "test" to test saved model \n')
+            'Type "run_all" to run all scripts \nType "train" to just train model \nType "test" to test saved model \n'
+            'Or "break" to break\n')
         user_input = input('What would you like to run: ')
         # user_input = "'" + user_input + "'"
 
@@ -29,7 +30,10 @@ def choices():
         if user_input == 'test':
             do_run_test()
 
-        if user_input is not ('run_all', 'train', 'test'):
+        if user_input == 'break':
+            break
+
+        if user_input is not ('run_all', 'train', 'test', 'break'):
             print('Please enter either "run_all", "train", or "test" \n')
             print('Try again \n')
             continue
