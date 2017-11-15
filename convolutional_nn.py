@@ -111,6 +111,8 @@ def run(X_, Y_, epochs=10, learning_rate=0.01):
     conv3 = maxpool2d(conv3, 'SAME')
     conv3 = tf.nn.dropout(conv3, 0.2)
 
+
+
     # Fully Conncected Layer
     fc = tf.reshape(conv3, [-1, 512])
     fc = tf.nn.dropout(fc, 0.5)
@@ -127,9 +129,9 @@ def run(X_, Y_, epochs=10, learning_rate=0.01):
     cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=y, logits=output, name='loss'))
     tf.summary.scalar("cost", cost)
 
-    auc = tf.metrics.auc(labels=y, predictions=output, name='auc')
-    tf.summary.scalar("auc", auc)
-    tf.summary.histogram('Hist Auc', auc)
+    # auc = tf.metrics.auc(labels=y, predictions=output, name='auc')
+    # tf.summary.scalar("auc", auc)
+    # tf.summary.histogram('Hist Auc', auc)
 
     # Validation cost
     validation_cost = cost
@@ -207,7 +209,7 @@ def run(X_, Y_, epochs=10, learning_rate=0.01):
 
             print("Testing Accuracy:", sess.run(accuracy, feed_dict={x: X_test, y: y_test}))
 
-            print("Testing AUC:", sess.run(auc, feed_dict={x: X_test, y: y_test}))
+            # print("Testing AUC:", sess.run(auc, feed_dict={x: X_test, y: y_test}))
 
             print("Validation Loss:", sess.run(validation_cost, feed_dict={x: X_test, y: y_test}))
 

@@ -3,6 +3,10 @@
 *.csv
 .idea/
 logs/
+<<<<<<< HEAD
+*.jpg
+*.csv
+=======
 __pycache__/
 
 /humans/
@@ -15,3 +19,4 @@ __pycache__/
 /frankfurter/
 /hotdog/
 /hot_dog/
+>>>>>>> 57281270cde3ce497c5976732e99bad20dd91ba5

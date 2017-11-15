@@ -125,6 +125,7 @@ def execute_nn(X_train, X_test, y_train, y_test, x, y, cost, validation_cost, ac
         # create log writer object
         writer = tf.summary.FileWriter(logs_path, graph=tf.get_default_graph(), max_queue=2)
 
+        total_loss = None
         # perform training cycles
         for epoch in range(training_epochs):
 

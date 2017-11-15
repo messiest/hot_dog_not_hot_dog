@@ -27,7 +27,7 @@ except:  # catch *all* exceptions
     print("Error: %s" % e)
 
 
-def store_raw_images(folders, links):
+def get_images(folders, links):
     pic_num = 1
     for link, folder in zip(links, folders):
         loop_start = time.time()
@@ -52,6 +52,17 @@ def store_raw_images(folders, links):
         print('Finished scraping ' + folder + ' in {} seconds'.format(round(loop_end - loop_start, 0)))
 
 
+<<<<<<< HEAD
+def main():
+    links = ['http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n01846331']
+    paths = ['ducks']
+
+    get_images(paths, links)
+
+
+if __name__ == '__main__':
+    main()
+=======
 def read_images_to_folder():
     links = [
         'http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=n02472987',
@@ -86,3 +97,4 @@ def read_images_to_folder():
     end = time.time()
 
     print('Finished scraping in {} seconds'.format(round(end - start, 0)))
+>>>>>>> 57281270cde3ce497c5976732e99bad20dd91ba5

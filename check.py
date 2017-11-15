@@ -51,11 +51,43 @@ def restore_model(tests, model_path):
         return y_hats
 
 
+<<<<<<< HEAD
+def main():
+    model_path = "saved_model/model.ckpt"
+    file_path = ['hotdog.jpg', 'not_hotdog.jpg']
+    image_check = input_parser(file_path)
+    prediction = restore_model(image_check)
+    print('Hotdog test')
+    print('------------ \n')
+    if prediction[0] == True:
+        guess = 'Hotdog'
+        print('This is a ', guess, '! My NN was right.')
+    else:
+        guess = 'not a hotdog'
+        print('This is ', guess, ' and my NN was wrong.')
+    print('\n')
+    print('\n')
+
+    print('Not hotdog test')
+    print('--------------- \n')
+    file_path = 'not_hotdog.jpg'
+    image_check = input_parser(file_path)
+    prediction = restore_model(image_check)
+    if prediction[0] == True:
+        guess = 'Hotdog'
+        print('This is a ', guess, ' :( My NN was wrong.')
+    else:
+        guess = 'not a hotdog'
+        print('This is ', guess, ' and my NN was right!.')
+    print('\n \n')
+    prediction = restore_model(image_check, model_path)
+=======
 def run(model_path):
     model_path = model_path
     file_path = ['hotdog.jpg', 'not_hotdog.jpg']
     tests = input_parser(file_path)
     prediction = restore_model(tests, model_path)
+>>>>>>> 57281270cde3ce497c5976732e99bad20dd91ba5
 
     for i in range(len(prediction)):
         print('Hotdog test')
